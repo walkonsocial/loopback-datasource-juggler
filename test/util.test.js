@@ -3,6 +3,7 @@ var utils = require('../lib/utils');
 var fieldsToArray = utils.fieldsToArray;
 var removeUndefined = utils.removeUndefined;
 var mergeSettings = utils.mergeSettings;
+var mergeIncludes = utils.mergeIncludes;
 var sortObjectsByIds = utils.sortObjectsByIds;
 
 describe('util.fieldsToArray', function () {
@@ -215,6 +216,86 @@ describe('sortObjectsByIds', function () {
     var sorted = sortObjectsByIds('id', [5, 3, 2], items, true);
     var names = sorted.map(function(u) { return u.name; });
     should.deepEqual(names, ['e', 'c', 'b']);
+  });
+
+});
+
+describe('util.mergeIncludes', function () {
+
+  function checkInputOutput(baseInclude,updateInclude,expectedInclude){
+    var mergedInclude = mergeIncludes(baseInclude, updateInclude);
+    /*console.log(mergedInclude);
+    console.log(expectedInclude);*/
+    should.deepEqual(mergedInclude, expectedInclude, 'Merged include should match the expectation');
+  }
+
+  it('Merge string values to object', function () {
+    var baseInclude = "stringValue1";
+    var updateInclude = "stringValue2";
+    var expectedInclude = {
+      "stringValue1":true,
+      "stringValue2":true
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+  });
+
+  it('Merge string & array values to object', function () {
+    var baseInclude = "stringValue1";
+    var updateInclude = ["stringValue2"];
+    var expectedInclude = {
+      "stringValue1":true,
+      "stringValue2":true
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+  });
+
+  it('Merge string & object values to object', function () {
+    var baseInclude = ["stringValue1"];
+    var updateInclude = {"stringValue2":"stringValue2Include"};
+    var expectedInclude = {
+      "stringValue1":true,
+      "stringValue2":"stringValue2Include"
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+  });
+
+  it('Merge array & array values to object', function () {
+    var baseInclude = ["stringValue1"];
+    var updateInclude = ["stringValue2"];
+    var expectedInclude = {
+      "stringValue1":true,
+      "stringValue2":true
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+  });
+
+  it('Merge array & object values to object', function () {
+    var baseInclude = ["stringValue1"];
+    var updateInclude = {"stringValue2":"stringValue2Include"};
+    var expectedInclude = {
+      "stringValue1":true,
+      "stringValue2":"stringValue2Include"
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+  });
+
+  it('Merge object & object values to object', function () {
+    var baseInclude = {"stringValue1":"stringValue1Include"};
+    var updateInclude = {"stringValue2":"stringValue2Include"};
+    var expectedInclude = {
+      "stringValue1":"stringValue1Include",
+      "stringValue2":"stringValue2Include"
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+  });
+
+  it('Override property collision with update value', function () {
+    var baseInclude = {"stringValue1":"baseValue"};
+    var updateInclude = {"stringValue1":"updateValue"};
+    var expectedInclude = {
+      "stringValue1":"updateValue"
+    };
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
   });
 
 });
