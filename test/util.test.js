@@ -222,80 +222,143 @@ describe('sortObjectsByIds', function () {
 
 describe('util.mergeIncludes', function () {
 
-  function checkInputOutput(baseInclude,updateInclude,expectedInclude){
+  function checkInputOutput(baseInclude, updateInclude, expectedInclude) {
     var mergedInclude = mergeIncludes(baseInclude, updateInclude);
-    /*console.log(mergedInclude);
-    console.log(expectedInclude);*/
-    should.deepEqual(mergedInclude, expectedInclude, 'Merged include should match the expectation');
+    should.deepEqual(mergedInclude, expectedInclude,
+      'Merged include should match the expectation');
   }
 
   it('Merge string values to object', function () {
-    var baseInclude = "stringValue1";
-    var updateInclude = "stringValue2";
-    var expectedInclude = {
-      "stringValue1":true,
-      "stringValue2":true
-    };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var baseInclude = 'relation1';
+    var updateInclude = 'relation2';
+    var expectedInclude = [
+      {relation2: true},
+      {relation1: true}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
   it('Merge string & array values to object', function () {
-    var baseInclude = "stringValue1";
-    var updateInclude = ["stringValue2"];
-    var expectedInclude = {
-      "stringValue1":true,
-      "stringValue2":true
-    };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var baseInclude = 'relation1';
+    var updateInclude = ['relation2'];
+    var expectedInclude = [
+      {relation2: true},
+      {relation1: true}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
   it('Merge string & object values to object', function () {
-    var baseInclude = ["stringValue1"];
-    var updateInclude = {"stringValue2":"stringValue2Include"};
-    var expectedInclude = {
-      "stringValue1":true,
-      "stringValue2":"stringValue2Include"
-    };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var baseInclude = ['relation1'];
+    var updateInclude = {relation2: 'relation2Include'};
+    var expectedInclude = [
+      {relation2: 'relation2Include'},
+      {relation1: true}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
   it('Merge array & array values to object', function () {
-    var baseInclude = ["stringValue1"];
-    var updateInclude = ["stringValue2"];
-    var expectedInclude = {
-      "stringValue1":true,
-      "stringValue2":true
-    };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var baseInclude = ['relation1'];
+    var updateInclude = ['relation2'];
+    var expectedInclude = [
+      {relation2: true},
+      {relation1: true}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
   it('Merge array & object values to object', function () {
-    var baseInclude = ["stringValue1"];
-    var updateInclude = {"stringValue2":"stringValue2Include"};
-    var expectedInclude = {
-      "stringValue1":true,
-      "stringValue2":"stringValue2Include"
-    };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var baseInclude = ['relation1'];
+    var updateInclude = {relation2: 'relation2Include'};
+    var expectedInclude = [
+      {relation2: 'relation2Include'},
+      {relation1: true}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
   it('Merge object & object values to object', function () {
-    var baseInclude = {"stringValue1":"stringValue1Include"};
-    var updateInclude = {"stringValue2":"stringValue2Include"};
-    var expectedInclude = {
-      "stringValue1":"stringValue1Include",
-      "stringValue2":"stringValue2Include"
-    };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var baseInclude = {relation1: 'relation1Include'};
+    var updateInclude = {relation2: 'relation2Include'};
+    var expectedInclude = [
+      {relation2: 'relation2Include'},
+      {relation1: 'relation1Include'}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
   it('Override property collision with update value', function () {
-    var baseInclude = {"stringValue1":"baseValue"};
-    var updateInclude = {"stringValue1":"updateValue"};
-    var expectedInclude = {
-      "stringValue1":"updateValue"
+    var baseInclude = {relation1: 'baseValue'};
+    var updateInclude = {relation1: 'updateValue'};
+    var expectedInclude = [
+      {relation1: 'updateValue'}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
+  });
+
+  it('Merge string includes & include with relation syntax properly',
+    function () {
+      var baseInclude = 'relation1';
+      var updateInclude = {relation: 'relation1'};
+      var expectedInclude = [
+        {relation: 'relation1'}
+      ];
+      checkInputOutput(baseInclude, updateInclude, expectedInclude);
+    });
+
+  it('Merge string includes & include with scope properly', function () {
+    var baseInclude = 'relation1';
+    var updateInclude = {
+      relation: 'relation1',
+      scope: {include: 'relation2'}
     };
-    checkInputOutput(baseInclude, updateInclude, expectedInclude);    
+    var expectedInclude = [
+      {relation: 'relation1', scope: {include: 'relation2'}}
+    ];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
+  });
+
+  it('Merge includes with and without relation syntax properly',
+    function () {
+      //w & w/o relation syntax - no collision
+      var baseInclude = ['relation2'];
+      var updateInclude = {
+        relation: 'relation1',
+        scope: {include: 'relation2'}
+      };
+      var expectedInclude = [{
+        relation: 'relation1',
+        scope: {include: 'relation2'}
+      }, {relation2: true}];
+      checkInputOutput(baseInclude, updateInclude, expectedInclude);
+
+      //w & w/o relation syntax - collision
+      baseInclude = ['relation1'];
+      updateInclude = {relation: 'relation1', scope: {include: 'relation2'}};
+      expectedInclude =
+        [{relation: 'relation1', scope: {include: 'relation2'}}];
+      checkInputOutput(baseInclude, updateInclude, expectedInclude);
+
+      //w & w/o relation syntax - collision
+      baseInclude = {relation: 'relation1', scope: {include: 'relation2'}};
+      updateInclude = ['relation1'];
+      expectedInclude = [{relation1: true}];
+      checkInputOutput(baseInclude, updateInclude, expectedInclude);
+    });
+
+  it('Merge includes with mixture of strings, arrays & objects properly', function () {
+    var baseInclude = ['relation1', {relation2: true},
+      {relation: 'relation3', scope: {where: {id: 'some id'}}},
+      {relation: 'relation5', scope: {where: {id: 'some id'}}}
+    ];
+    var updateInclude = ['relation4', {relation3: true},
+      {relation: 'relation2', scope: {where: {id: 'some id'}}}];
+    var expectedInclude = [{relation4: true}, {relation3: true},
+      {relation: 'relation2', scope: {where: {id: 'some id'}}},
+      {relation1: true},
+      {relation: 'relation5', scope: {where: {id: 'some id'}}}];
+    checkInputOutput(baseInclude, updateInclude, expectedInclude);
   });
 
 });
